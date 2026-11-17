@@ -14,7 +14,7 @@ Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_over
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `seeded_regression C-002@11`, run ID `E-seeded_regression-20261117-d926` |
+| Trial | `seeded_regression C-002@11`, run ID `E-seeded_regression-20261117-73a3` |
 | Triệu chứng | `TrialPass`, `RefundAmountCorrect` và `DbFactKept` FAIL (`status=resolved != denied`); step 6 `reply` nói `"Dạ, LogiX đã hoàn 20.000đ cho đơn O-202."`, ledger ghi `refund_vnd=20000`, `refund_count=1` (đáp án `0`) |
 | Bước sai đầu tiên | Event `3` `model_override` `{"delay_days": 5}` |
 | Vì sao là bước *đầu tiên* | Event `1` (`handoff`) giao đúng danh sách tool read-only; Event `2` (`investigator`) đọc đúng đơn `O-202` từ DB với `delay_days=2`, `visible=true` — tới Event `3` mới lấy `5` ngày trong ticket ghi đè lên DB |
