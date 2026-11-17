@@ -29,3 +29,16 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10.
 - **Phạm vi pilot:** Claim hoàn tiền trễ giao / hư hỏng đơn hàng LogiX-VN nội địa trong hệ thống giả lập, 14 kịch bản đơn lẻ (`C-001`..`C-014`).
 - **Giới hạn / bằng chứng còn thiếu:** Chạy trên `MockLLM`, cỡ mẫu `14` item (CI rộng, chỉ bắt ổn định hồi quy lớn), và judge calibration dùng dữ liệu replay công khai (`100` mẫu), chưa đo trên người dùng thật hoặc LLM thật ngoài production.
 - **Khi nào tăng eval-set version:** Khi bổ sung item mới từ trace case thực tế hoặc thêm tập adversarial pack (lên `v2` ở M5), bắt buộc chạy lại baseline mới trên `main`.
+
+## Mở rộng v2 (M5–M7 — Advanced & Expert)
+- **Baseline v2:** `E-swarm-20261117-822b` · eval set `v2` (`822b682edf39`, `28 item × 5 seed = 140` trials: `14` v1 + `14` adversarial pack) · `metric_spec_v2.yaml` (`2.0`).
+- **A/A noise & chọn ngưỡng `pass_hat_5` (M6):**
+  - Chạy `lab9.mutation --spec config/metric_spec_v2.yaml --aa 66,77,88,99,110` cho **`delta = +0.0000`** trên toàn bộ 14 metric với `MockLLM` (`pass_hat_5 = 0.8929`).
+  - Với LLM thật ngoài thực tế, dải nhiễu A/A sẽ `> 0`; ngưỡng blocking phải nằm **ngoài** dải nhiễu đó để không chặn nhầm PR tốt. Ở v2 đặt sàn blocking `pass_hat_5 ≥ 0.85` (≥ 0.80 và nằm dưới baseline `0.8929`), chặn được `flaky_regression` (`pass_hat_5` tụt xuống dưới sàn).
+- **Slice gate (M5):**
+  - `slice:money_movement/pass_rate` (`min: 0.90`, `no_significant_drop: true`, blocking) bắt được `slice_regression` (trong khi `pass_rate` trung bình toàn cục vẫn là `0.9357 > 0.85`).
+  - `slice:denial/pass_rate` và `slice:adversarial/pass_rate` (`min: 0.90`, `no_significant_drop: true`, blocking) bảo vệ nhóm từ chối và nhóm tấn công đối kháng.
+- **Mutation scorecard & Integrity gate (M7):**
+  - `lab9.mutation` đạt **`3/3`**, **`0` false alarms** (`fixed` & `honest_refactor` → `merge`; `seeded_regression`, `slice_regression`, `flaky_regression` → `block`).
+  - `lab9.traps` chặn **`4/4`** trap công khai (`evaluator_errors_as_nan`, `dropped_failing_rows`, `cherry_picked_seeds`, `loosened_spec`) kèm kiểm tra trùng dòng `(item_id, seed)`, `evaluator_failures`, sửa `slices` và ratchet `--base-spec`.
+- **Giới hạn cỡ mẫu:** Một bug hiếm chỉ xuất hiện ở `1/3` seed (`rare`) **không** thể phát hiện ổn định chỉ với `5` seed; cần ghi nhận là giới hạn cỡ mẫu thay vì hạ ngưỡng một cách khiên cưỡng.
