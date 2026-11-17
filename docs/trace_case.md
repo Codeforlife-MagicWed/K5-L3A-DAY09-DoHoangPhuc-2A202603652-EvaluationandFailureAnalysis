@@ -14,14 +14,14 @@ Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_over
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Trial | `seeded_regression C-002@11`, run ID `E-seeded_regression-20261117-d926` |
+| Triệu chứng | `TrialPass`, `RefundAmountCorrect` và `DbFactKept` FAIL (`status=resolved != denied`); step 6 `reply` nói `"Dạ, LogiX đã hoàn 20.000đ cho đơn O-202."`, ledger ghi `refund_vnd=20000`, `refund_count=1` (đáp án `0`) |
+| Bước sai đầu tiên | Event `3` `model_override` `{"delay_days": 5}` |
+| Vì sao là bước *đầu tiên* | Event `1` (`handoff`) giao đúng danh sách tool read-only; Event `2` (`investigator`) đọc đúng đơn `O-202` từ DB với `delay_days=2`, `visible=true` — tới Event `3` mới lấy `5` ngày trong ticket ghi đè lên DB |
+| Failure mode | `FM-03` (`ticket_trust — tin ticket hơn DB`) |
+| Đối chứng | Trên `fixed C-002@11`: không có `model_override`; sau Event `2` (`investigator`) sang thẳng Event `3` (`quote`: `amount_vnd=0`, `no_entitlement`) và Event `4` (`reply` từ chối), `ledger=0`, `status=denied` (`PASS`) |
+| Regression test | `tests/test_lab9_regression.py::test_c002_ticket_trust_regression_and_fixed_control` (dùng `DbFactKept` và `RefundAmountCorrect`); đã chạy xác nhận bắt lỗi trên `seeded_regression` và pass trên `fixed` |
+| Chưa chắc chắn | Trace chạy bằng `MockLLM` và công tắc gài lỗi; chưa đo được xác suất bị prompt đánh lừa trên LLM thật, và nếu lỗi không phát event `model_override` (`quiet_override`) thì `DbFactKept` đơn lẻ sẽ không bắt được |
 
 ## Quy tắc
 
